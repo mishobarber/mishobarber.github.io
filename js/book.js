@@ -1,9 +1,9 @@
-import { db, configured, $, esc, WD, MO, pd, addD, fDate, money, today, ls, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG } from "./core.js";
+import { db, configured, $, esc, WD, MO, ymOf, addM, monthTitle, monthGrid, BOOK_DAYS, pd, addD, fDate, money, today, ls, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG } from "./core.js";
 import { doc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 $("#pole").innerHTML = poleSVG();
 let cfg = null, cfgLoaded = false, taken = new Set();
-const S = { svcs: [], bar: null, date: null, time: null };
+const S = { svcs: [], bar: null, date: null, time: null, ym: null };
 const svcs = () => svcsOf(cfg), bars = () => barsOf(cfg), step = () => stepOf(cfg);
 const sel = () => svcs().filter(s => S.svcs.includes(s.id));
 let mine = [];
@@ -32,10 +32,14 @@ function render() {
   $("#svcs").innerHTML = svcs().map(s => `<button class="opt" data-act="svc" data-v="${esc(s.id)}" aria-pressed="${S.svcs.includes(s.id)}"><b>${S.svcs.includes(s.id) ? "✓ " : ""}${esc(s.name)}</b><small>${step()} րոպե · ${esc(money(s.price))}</small></button>`).join("");
   $("#bars").innerHTML = bars().map(b => `<button class="opt bar" data-act="bar" data-v="${esc(b.id)}" aria-pressed="${S.bar === b.id}"><span class="ava">${esc((b.name || "?").trim().charAt(0))}</span><b>${esc(b.name)}</b></button>`).join("");
 
-  const days = []; for (let i = 0; i < 14; i++) days.push(addD(today(), i));
-  if (!S.date || S.date < today() || isOff(cfg, S.date)) S.date = days.find(d => !isOff(cfg, d)) || null;
-  $("#days").innerHTML = days.map((d, i) => { const x = pd(d); return `<button class="day" data-act="day" data-v="${d}" aria-pressed="${S.date === d}" ${isOff(cfg, d) ? "disabled" : ""}><small>${i === 0 ? "Այսօր" : i === 1 ? "Վաղը" : WD[x.getDay()]}</small><b>${x.getDate()}</b><small>${MO[x.getMonth()].slice(0, 3)}</small></button>`; }).join("");
-
+  const last = addD(today(), BOOK_DAYS - 1);
+  const openDay = d => d >= today() && d <= last && !isOff(cfg, d);
+  if (!S.date || !openDay(S.date)) { let d = today(); while (d <= last && !openDay(d)) d = addD(d, 1); S.date = d <= last ? d : null; }
+  if (!S.ym) S.ym = ymOf(S.date || today());
+  if (S.ym < ymOf(today())) S.ym = ymOf(today()); if (S.ym > ymOf(last)) S.ym = ymOf(last);
+  $("#bmT").textContent = monthTitle(S.ym);
+  $("#days").innerHTML = monthGrid(S.ym, (d, dn) => `<button class="cd ${d === today() ? "today" : ""}" data-act="day" data-v="${d}" aria-pressed="${S.date === d}" ${openDay(d) ? "" : "disabled"}><b>${dn}</b>${d === today() ? "<small>այսօր</small>" : ""}</button>`);
+  $("#dayT").textContent = S.date ? fDate(S.date) : "";
   const sl = sel(), dur = sl.length * step(), total = sl.reduce((a, x) => a + (Number(x.price) || 0), 0);
   const one = bars().length === 1;
   $("#s2").hidden = one;
@@ -89,13 +93,13 @@ document.addEventListener("click", ev => {
   const a = b.dataset.act, v = b.dataset.v;
   if (a === "svc") { S.svcs = S.svcs.includes(v) ? S.svcs.filter(x => x !== v) : [...S.svcs, v]; S.time = null; render(); }
   else if (a === "bar") { S.bar = v; S.time = null; render(); }
+  else if (a === "bm") { S.ym = addM(S.ym, Number(v)); render(); }
   else if (a === "day") { S.date = v; S.time = null; render(); }
   else if (a === "time") { S.time = v; render(); $("#s4").scrollIntoView({ behavior: "smooth", block: "start" }); }
   else if (a === "book") book();
   else if (a === "okclose") $("#ov").hidden = true;
 });
 document.addEventListener("keydown", ev => { if (ev.key === "Escape") $("#ov").hidden = true; });
-$("#days").addEventListener("keydown", ev => { if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") $("#days").scrollBy({ left: ev.key === "ArrowRight" ? 160 : -160, behavior: "smooth" }); });
 
 $("#cName").value = ls.get("bs_name"); $("#cPhone").value = ls.get("bs_phone");
 renderMine(); render();

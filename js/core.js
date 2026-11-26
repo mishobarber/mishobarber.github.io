@@ -10,6 +10,7 @@ export const $ = s => document.querySelector(s);
 export const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export const WD = ["Կիր", "Երկ", "Երք", "Չրք", "Հնգ", "Ուրբ", "Շբթ"];
 export const WDL = ["Կիրակի", "Երկուշաբթի", "Երեքշաբթի", "Չորեքշաբթի", "Հինգշաբթի", "Ուրբաթ", "Շաբաթ"];
+export const MN = ["Հունվար", "Փետրվար", "Մարտ", "Ապրիլ", "Մայիս", "Հունիս", "Հուլիս", "Օգոստոս", "Սեպտեմբեր", "Հոկտեմբեր", "Նոյեմբեր", "Դեկտեմբեր"];
 export const MO = ["հունվարի", "փետրվարի", "մարտի", "ապրիլի", "մայիսի", "հունիսի", "հուլիսի", "օգոստոսի", "սեպտեմբերի", "հոկտեմբերի", "նոյեմբերի", "դեկտեմբերի"];
 export const pad = n => String(n).padStart(2, "0");
 export const ymd = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
@@ -96,3 +97,19 @@ export const DEFAULT_CONFIG = {
   ],
   barbers: [{ id: "b1", name: "Միշո" }]
 };
+
+// ---- month calendar ----
+export const BOOK_DAYS = 60;
+export const ymOf = ds => ds.slice(0, 7);
+export const addM = (ym, n) => { const [y, m] = ym.split("-").map(Number); const d = new Date(y, m - 1 + n, 1); return d.getFullYear() + "-" + pad(d.getMonth() + 1); };
+export const monthTitle = ym => { const [y, m] = ym.split("-").map(Number); return MN[m - 1] + " " + y; };
+// cell(ds) -> inner HTML of a day button (or null to render a muted, non-clickable day)
+export function monthGrid(ym, cell) {
+  const [y, m] = ym.split("-").map(Number);
+  const first = new Date(y, m - 1, 1), n = new Date(y, m, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; // Monday first
+  let h = '<div class="cal-h">' + [1, 2, 3, 4, 5, 6, 0].map(i => `<span>${WD[i]}</span>`).join("") + "</div><div class=\"cal-g\">";
+  for (let i = 0; i < lead; i++) h += "<span></span>";
+  for (let d = 1; d <= n; d++) h += cell(ym + "-" + pad(d), d);
+  return h + "</div>";
+}

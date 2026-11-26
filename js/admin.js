@@ -1,10 +1,10 @@
-import { app, db, configured, $, esc, WD, WDL, MO, pd, addD, money, today, toMin, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG, DEFAULT_CONFIG } from "./core.js";
+import { app, db, configured, $, esc, WD, WDL, MO, ymOf, addM, monthTitle, monthGrid, pd, addD, money, today, toMin, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG, DEFAULT_CONFIG } from "./core.js";
 import { doc, collection, query, where, onSnapshot, updateDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 $("#pole").innerHTML = poleSVG();
 let cfg = null, rows = [], upcoming = [], taken = new Set(), draft = null, unsubDay = [], unsubUp = null;
-const A = { tab: "list", date: today(), bar: "all", confirm: null };
+const A = { tab: "list", date: today(), bar: "all", confirm: null, ym: ymOf(today()) };
 const svcs = () => svcsOf(cfg), bars = () => barsOf(cfg), step = () => stepOf(cfg);
 
 function note(t) { const n = $("#notReady"); n.hidden = !t; n.textContent = t || ""; }
@@ -12,25 +12,29 @@ function note(t) { const n = $("#notReady"); n.hidden = !t; n.textContent = t ||
 /* ---------- overview ---------- */
 function subscribeUpcoming() {
   if (unsubUp) return;
-  unsubUp = onSnapshot(query(collection(db, "bookings"), where("date", ">=", today())),
+  unsubUp = onSnapshot(query(collection(db, "bookings"), where("date", ">=", ymOf(today()) + "-01")),
     q => { upcoming = q.docs.map(d => ({ ...d.data(), id: d.id })); renderStrip(); }, e => console.error(e));
 }
+const kfmt = n => n >= 1000 ? (Math.round(n / 100) / 10).toString().replace(/\.0$/, "") + "k" : String(n);
 function renderStrip() {
-  const days = []; for (let i = 0; i < 14; i++) days.push(addD(today(), i));
   const act = upcoming.filter(e => e.status !== "cancel" && (A.bar === "all" || e.barber === A.bar));
-  const by = Object.fromEntries(days.map(d => [d, { n: 0, s: 0 }]));
-  act.forEach(e => { if (by[e.date]) { by[e.date].n++; by[e.date].s += Number(e.price) || 0; } });
-  const max = Math.max(1, ...days.map(d => by[d].n));
-  const tot = days.reduce((a, d) => ({ n: a.n + by[d].n, s: a.s + by[d].s }), { n: 0, s: 0 });
-  $("#ovSum").textContent = `${tot.n} հաճախորդ · ${money(tot.s)}`;
-  $("#aStrip").innerHTML = days.map((d, i) => {
-    const x = pd(d), v = by[d];
-    return `<button class="sd ${isOff(cfg, d) ? "off" : ""}" data-act="apick" data-v="${d}" aria-pressed="${A.date === d}"><small>${i === 0 ? "Այսօր" : i === 1 ? "Վաղը" : WD[x.getDay()]}</small><span class="dn">${x.getDate()}</span><span class="cnt">${v.n ? v.n + " հաճ." : "—"}</span><span class="sum">${v.n ? esc(money(v.s)) : isOff(cfg, d) ? "հանգիստ" : "ազատ"}</span><span class="bar"><i style="width:${Math.round(v.n / max * 100)}%"></i></span></button>`;
-  }).join("");
+  const by = {};
+  act.forEach(e => { const v = by[e.date] ||= { n: 0, s: 0 }; v.n++; v.s += Number(e.price) || 0; });
+  const month = ym => {
+    const t = Object.entries(by).filter(([d]) => d.startsWith(ym)).reduce((a, [, v]) => ({ n: a.n + v.n, s: a.s + v.s }), { n: 0, s: 0 });
+    return `<div class="cal-m"><h4>${monthTitle(ym)}<span>${t.n} հաճ. · ${esc(money(t.s))}</span></h4>` + monthGrid(ym, (d, dn) => {
+      const v = by[d], off = isOff(cfg, d);
+      return `<button class="cd ${v ? "has" : ""} ${d === today() ? "today" : ""} ${off && !v ? "mute" : ""}" data-act="apick" data-v="${d}" aria-pressed="${A.date === d}" aria-label="${dn} — ${v ? v.n + " հաճախորդ, " + money(v.s) : off ? "հանգիստ" : "ազատ"}"><b>${dn}</b>${v ? `<span class="n">${v.n}</span><small>${kfmt(v.s)} ֏</small>` : off ? "<small>հանգ.</small>" : ""}</button>`;
+    }) + "</div>";
+  };
+  const t = Object.entries(by).filter(([d]) => d >= today()).reduce((a, [, v]) => ({ n: a.n + v.n, s: a.s + v.s }), { n: 0, s: 0 });
+  $("#ovSum").textContent = `Առաջիկա՝ ${t.n} հաճ. · ${money(t.s)}`;
+  $("#aStrip").innerHTML = month(A.ym) + month(addM(A.ym, 1));
 }
 
 /* ---------- day list ---------- */
 function subscribeDay() {
+  if (A.date >= ymOf(today()) && (ymOf(A.date) < A.ym || ymOf(A.date) > addM(A.ym, 1))) A.ym = ymOf(A.date);
   unsubDay.forEach(u => u()); unsubDay = [];
   rows = []; taken = new Set(); render();
   unsubDay.push(onSnapshot(query(collection(db, "bookings"), where("date", "==", A.date)),
@@ -141,6 +145,7 @@ document.addEventListener("click", async ev => {
   else if (a === "atab") { A.tab = v; if (v === "set") { draft = null; } render(); if (v === "set") renderSettings(); }
   else if (a === "aday") { A.date = v === "0" ? today() : addD(A.date, Number(v)); $("#wForm").hidden = true; $("#wBtn").hidden = false; subscribeDay(); renderStrip(); }
   else if (a === "abar") { A.bar = v; render(); renderStrip(); }
+  else if (a === "cm") { A.ym = addM(A.ym, Number(v)); if (A.ym < ymOf(today())) A.ym = ymOf(today()); renderStrip(); }
   else if (a === "apick") { A.date = v; $("#wForm").hidden = true; $("#wBtn").hidden = false; subscribeDay(); renderStrip(); }
   else if (a === "adone") { const e = rows.find(x => x.id === v); if (e) try { await updateDoc(doc(db, "bookings", v), { status: e.status === "done" ? "new" : "done" }); } catch (x) { console.error(x); } }
   else if (a === "acancel") {
