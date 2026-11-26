@@ -3,11 +3,31 @@ import { doc, collection, query, where, onSnapshot, updateDoc, setDoc, writeBatc
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 $("#pole").innerHTML = poleSVG();
-let cfg = null, rows = [], taken = new Set(), draft = null, unsubDay = [];
+let cfg = null, rows = [], upcoming = [], taken = new Set(), draft = null, unsubDay = [], unsubUp = null;
 const A = { tab: "list", date: today(), bar: "all", confirm: null };
 const svcs = () => svcsOf(cfg), bars = () => barsOf(cfg), step = () => stepOf(cfg);
 
 function note(t) { const n = $("#notReady"); n.hidden = !t; n.textContent = t || ""; }
+
+/* ---------- overview ---------- */
+function subscribeUpcoming() {
+  if (unsubUp) return;
+  unsubUp = onSnapshot(query(collection(db, "bookings"), where("date", ">=", today())),
+    q => { upcoming = q.docs.map(d => ({ ...d.data(), id: d.id })); renderStrip(); }, e => console.error(e));
+}
+function renderStrip() {
+  const days = []; for (let i = 0; i < 14; i++) days.push(addD(today(), i));
+  const act = upcoming.filter(e => e.status !== "cancel" && (A.bar === "all" || e.barber === A.bar));
+  const by = Object.fromEntries(days.map(d => [d, { n: 0, s: 0 }]));
+  act.forEach(e => { if (by[e.date]) { by[e.date].n++; by[e.date].s += Number(e.price) || 0; } });
+  const max = Math.max(1, ...days.map(d => by[d].n));
+  const tot = days.reduce((a, d) => ({ n: a.n + by[d].n, s: a.s + by[d].s }), { n: 0, s: 0 });
+  $("#ovSum").textContent = `${tot.n} հաճախորդ · ${money(tot.s)}`;
+  $("#aStrip").innerHTML = days.map((d, i) => {
+    const x = pd(d), v = by[d];
+    return `<button class="sd ${isOff(cfg, d) ? "off" : ""}" data-act="apick" data-v="${d}" aria-pressed="${A.date === d}"><small>${i === 0 ? "Այսօր" : i === 1 ? "Վաղը" : WD[x.getDay()]}</small><span class="dn">${x.getDate()}</span><span class="cnt">${v.n ? v.n + " հաճ." : "—"}</span><span class="sum">${v.n ? esc(money(v.s)) : isOff(cfg, d) ? "հանգիստ" : "ազատ"}</span><span class="bar"><i style="width:${Math.round(v.n / max * 100)}%"></i></span></button>`;
+  }).join("");
+}
 
 /* ---------- day list ---------- */
 function subscribeDay() {
@@ -29,17 +49,21 @@ function render() {
   const day = rows.filter(e => A.bar === "all" || e.barber === A.bar)
     .sort((a, b) => a.time.localeCompare(b.time) || (a.status === "cancel") - (b.status === "cancel"));
   const act = day.filter(e => e.status !== "cancel");
-  $("#aStats").innerHTML = [[act.length, "Գրանցում"], [act.filter(e => e.status === "done").length, "Եկել են"], [money(act.reduce((s, e) => s + (Number(e.price) || 0), 0)), "Սպասվող եկամուտ"]]
+  $("#aPick").value = A.date;
+  const sum = act.reduce((s, e) => s + (Number(e.price) || 0), 0), got = act.filter(e => e.status === "done").reduce((s, e) => s + (Number(e.price) || 0), 0);
+  $("#aStats").innerHTML = [[act.length, "Հաճախորդ այս օրը"], [money(sum), "Եթե բոլորը գան"], [(() => { const n = act.filter(e => e.status === "done").length; return n ? n + " · " + money(got) : "0"; })(), "Արդեն եկել են"]]
     .map(([v, l]) => `<div class="st"><b>${esc(v)}</b><span>${l}</span></div>`).join("");
   $("#aChips").innerHTML = bars().length > 1 ? [["all", "Բոլորը"], ...bars().map(b => [b.id, b.name])]
     .map(([id, n]) => `<button class="tab" data-act="abar" data-v="${esc(id)}" aria-pressed="${A.bar === id}">${esc(n)}</button>`).join("") : "";
+  let qn = 0;
   $("#aRows").innerHTML = day.length ? day.map(e => {
+    const q = e.status === "cancel" ? "–" : ++qn;
     const st = e.status === "done" ? "is-done" : e.status === "cancel" ? "is-cancel" : "";
     const acts = e.status === "cancel" ? '<span class="tag" style="color:var(--mute)">Չեղարկված</span>'
       : `<button class="btn ghost" data-act="adone" data-v="${esc(e.id)}">${e.status === "done" ? "↺ Վերադարձնել" : "✓ Եկավ"}</button>`
         + (e.status === "done" ? "" : `<button class="btn ghost" data-act="acancel" data-v="${esc(e.id)}">${A.confirm === e.id ? "Հաստատե՞լ" : "✕ Չեղարկել"}</button>`);
     const tel = String(e.phone || "").replace(/[^\d+]/g, "");
-    return `<div class="ar ${st}"><div class="t">${esc(e.time)}<small>${esc(e.dur)} ր</small></div><div class="who"><b>${esc(e.name)}</b>${e.by === "admin" ? ' <span class="tag" style="color:var(--mute)">ադմին</span>' : ""}<div>${tel ? `<a href="tel:${esc(tel)}">${esc(e.phone)}</a>` : ""}</div><div>${esc(e.serviceName)} · ${esc(e.barberName)} · <b style="color:var(--ink)">${esc(money(e.price))}</b></div></div><div class="acts">${acts}</div></div>`;
+    return `<div class="ar ${st}"><div class="t">${esc(e.time)}<small>${esc(e.dur)} ր</small></div><div class="who"><span class="q">${q}</span><b>${esc(e.name)}</b>${e.by === "admin" ? ' <span class="tag" style="color:var(--mute)">ադմին</span>' : ""}<div>${tel ? `<a href="tel:${esc(tel)}">${esc(e.phone)}</a>` : ""}</div><div>${esc(e.serviceName)} · ${esc(e.barberName)} · <b style="color:var(--ink)">${esc(money(e.price))}</b></div></div><div class="acts">${acts}</div></div>`;
   }).join("") : `<div class="empty" style="margin-top:12px">${isOff(cfg, A.date) ? "Հանգստյան օր է։" : "Այս օրը գրանցումներ դեռ չկան։"}</div>`;
 }
 
@@ -115,8 +139,9 @@ document.addEventListener("click", async ev => {
   if (a !== "acancel") A.confirm = null;
   if (a === "logout") signOut(getAuth(app));
   else if (a === "atab") { A.tab = v; if (v === "set") { draft = null; } render(); if (v === "set") renderSettings(); }
-  else if (a === "aday") { A.date = v === "0" ? today() : addD(A.date, Number(v)); $("#wForm").hidden = true; $("#wBtn").hidden = false; subscribeDay(); }
-  else if (a === "abar") { A.bar = v; render(); }
+  else if (a === "aday") { A.date = v === "0" ? today() : addD(A.date, Number(v)); $("#wForm").hidden = true; $("#wBtn").hidden = false; subscribeDay(); renderStrip(); }
+  else if (a === "abar") { A.bar = v; render(); renderStrip(); }
+  else if (a === "apick") { A.date = v; $("#wForm").hidden = true; $("#wBtn").hidden = false; subscribeDay(); renderStrip(); }
   else if (a === "adone") { const e = rows.find(x => x.id === v); if (e) try { await updateDoc(doc(db, "bookings", v), { status: e.status === "done" ? "new" : "done" }); } catch (x) { console.error(x); } }
   else if (a === "acancel") {
     if (A.confirm !== v) { A.confirm = v; render(); return; }
@@ -138,7 +163,8 @@ document.addEventListener("input", ev => {
   else if (t.dataset.b !== undefined) draft.barbers[Number(t.dataset.b)].name = t.value;
   else if (t.dataset.off !== undefined) { const i = Number(t.dataset.off); draft.daysOff = draft.daysOff.filter(x => x !== i); if (t.checked) draft.daysOff.push(i); }
 });
-document.addEventListener("change", ev => { if (ev.target.closest("#wSvc") || ev.target.id === "wBar") fillWalkTimes(); });
+document.addEventListener("change", ev => {
+  if (ev.target.id === "aPick" && ev.target.value) { A.date = ev.target.value; $("#wForm").hidden = true; $("#wBtn").hidden = false; subscribeDay(); renderStrip(); return; } if (ev.target.closest("#wSvc") || ev.target.id === "wBar") fillWalkTimes(); });
 
 /* ---------- auth ---------- */
 if (!configured) note("Կայքը դեռ միացված չէ Firebase-ին։ Լրացրեք js/firebase-config.js ֆայլը (տես README.md)։");
@@ -152,16 +178,16 @@ else {
   let started = false;
   onAuthStateChanged(auth, u => {
     $("#login").hidden = !!u; $("#vAdmin").hidden = !u; $("#logout").hidden = !u;
-    if (!u) { note(""); unsubDay.forEach(f => f()); unsubDay = []; return; }
+    if (!u) { note(""); unsubDay.forEach(f => f()); unsubDay = []; if (unsubUp) { unsubUp(); unsubUp = null; } return; }
     if (!started) {
       started = true;
       onSnapshot(doc(db, "config", "main"), s => {
         cfg = s.exists() ? s.data() : null;
         $("#shopName").textContent = (cfg?.name || "Բարբերշոփ") + " · Ադմին";
         if (!cfg && A.tab === "list") { A.tab = "set"; renderSettings(); }
-        render();
+        render(); renderStrip();
       }, e => console.error(e));
     }
-    subscribeDay();
+    subscribeDay(); subscribeUpcoming();
   });
 }
