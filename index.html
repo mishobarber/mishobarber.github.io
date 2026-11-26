@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Գրանցում · Միշո</title>
+<meta name="description" content="Առցանց գրանցում բարբերշոփում">
+<meta name="theme-color" content="#d71f2b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23d71f2b'/%3E%3Cpath d='M10 4h12v24H10z' fill='%23fff'/%3E%3Cpath d='M10 8l12-4v6L10 14zM10 20l12-4v6l-12 4z' fill='%232350e6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wdth,wght@62.5..100,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="sign band">
+  <div class="wrap">
+    <div>
+      <h1 id="shopName">Բարբերշոփ</h1>
+      <p id="shopInfo">Առցանց գրանցում</p>
+    </div>
+    <div id="pole"></div>
+  </div>
+</header>
+
+<main class="band" style="padding-top:8px">
+<div class="wrap">
+  <div id="mineBox" hidden style="padding-top:22px">
+    <h2>Ձեր գրանցումները</h2>
+    <div class="mine" id="mine"></div>
+  </div>
+  <div id="notReady" class="empty" style="margin-top:22px">Բեռնվում է…</div>
+  <div id="flow" hidden>
+    <div class="step" id="s1"><h2><span class="n">1</span>Ընտրեք ծառայությունները</h2><p id="svcHint" style="margin:-6px 0 12px;color:var(--mute)"></p><div class="grid" id="svcs"></div></div>
+    <div class="step" id="s2"><h2><span class="n">2</span>Ընտրեք վարսավիրին</h2><div class="grid" id="bars"></div></div>
+    <div class="step" id="s3"><h2><span class="n">3</span>Օրը և ժամը</h2><div class="days" id="days"></div><div style="height:14px"></div><div id="times"></div></div>
+    <div class="step" id="s4" style="border:0">
+      <h2><span class="n">4</span>Ձեր տվյալները</h2>
+      <div class="row2">
+        <div><label for="cName">Անուն</label><input id="cName" autocomplete="name" placeholder="Արամ" maxlength="60"></div>
+        <div><label for="cPhone">Հեռախոս</label><input id="cPhone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+374 99 123456" maxlength="30"></div>
+      </div>
+      <div id="summary"></div>
+      <button class="btn big" id="bookBtn" data-act="book">Գրանցվել</button>
+      <div class="msg" id="bookMsg" role="status"></div>
+    </div>
+  </div>
+</div>
+</main>
+<div class="foot" id="foot">Գրանցումը պահվում է անմիջապես · ժամը զբաղվում է ձեզ համար</div>
+
+<div class="ov" id="ov" hidden><div class="done" role="dialog" aria-modal="true" aria-labelledby="okT">
+  <div class="top"><h3 id="okT">Դուք գրանցված եք</h3><div style="opacity:.9">Սպասում ենք ձեզ</div></div>
+  <div class="body"><div id="okBody"></div><button class="btn big" data-act="okclose">Լավ</button></div>
+</div></div>
+
+<script type="module" src="js/book.js"></script>
+</body>
+</html>

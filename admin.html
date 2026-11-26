@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ադմին · Բարբերշոփ</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#d71f2b">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2316161a'/%3E%3Cpath d='M10 4h12v24H10z' fill='%23fff'/%3E%3Cpath d='M10 8l12-4v6L10 14zM10 20l12-4v6l-12 4z' fill='%23d71f2b'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Armenian:wdth,wght@62.5..100,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="sign band">
+  <div class="wrap">
+    <div>
+      <h1 id="shopName">Ադմին</h1>
+      <p id="shopInfo">Գրանցումների կառավարում</p>
+      <div class="topnav">
+        <a class="pill" href="./" target="_blank" rel="noopener">Գրանցման էջը ↗</a>
+        <button class="pill" id="logout" data-act="logout" hidden>Ելք</button>
+      </div>
+    </div>
+    <div id="pole"></div>
+  </div>
+</header>
+
+<main class="band" style="padding-top:8px">
+<div class="wrap">
+  <div id="notReady" class="empty" style="margin-top:22px" hidden></div>
+
+  <form class="login" id="login" hidden>
+    <h2>Մուտք</h2>
+    <label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required>
+    <label for="lPass">Գաղտնաբառ</label><input id="lPass" type="password" autocomplete="current-password" required>
+    <button class="btn big" type="submit" style="margin-top:6px">Մուտք գործել</button>
+    <div class="msg" id="lMsg" role="status"></div>
+  </form>
+
+  <section id="vAdmin" hidden style="padding-top:22px">
+    <div class="tabs">
+      <button class="tab" data-act="atab" data-v="list" aria-pressed="true">Գրանցումներ</button>
+      <button class="tab" data-act="atab" data-v="set" aria-pressed="false">Կարգավորումներ</button>
+    </div>
+    <div id="aList">
+      <div class="dnav">
+        <button class="btn ghost" data-act="aday" data-v="-1" aria-label="Նախորդ օր">‹</button>
+        <div class="d" id="aDate"></div>
+        <button class="btn ghost" data-act="aday" data-v="0">Այսօր</button>
+        <button class="btn ghost" data-act="aday" data-v="1" aria-label="Հաջորդ օր">›</button>
+      </div>
+      <div class="stats" id="aStats"></div>
+      <div class="chips" id="aChips"></div>
+      <button class="btn sm" data-act="wopen" id="wBtn">+ Նոր գրանցում</button>
+      <div class="panel" id="wForm" hidden style="margin-top:14px">
+        <h3>Նոր գրանցում (զանգով կամ տեղում)</h3>
+        <div class="row2">
+          <div><label for="wName">Անուն</label><input id="wName" maxlength="60"></div>
+          <div><label for="wPhone">Հեռախոս</label><input id="wPhone" type="tel" inputmode="tel" maxlength="30"></div>
+          <div style="grid-column:1/-1"><label>Ծառայություններ</label><div class="wk" id="wSvc"></div></div>
+          <div id="wBarBox"><label for="wBar">Վարսավիր</label><select id="wBar"></select></div>
+          <div><label for="wTime">Ժամ</label><select id="wTime"></select></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn sm" data-act="wsave">Ավելացնել</button><button class="btn ghost" data-act="wclose">Փակել</button></div>
+        <div class="msg" id="wMsg" role="status"></div>
+      </div>
+      <div id="aRows" style="margin-top:8px"></div>
+    </div>
+    <div id="aSet" hidden></div>
+  </section>
+</div>
+</main>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

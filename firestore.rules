@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ⬇️ Այստեղ գրեք ադմինի email-ը (կարող եք մի քանիսը՝ ստորակետով)
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['misho@gmail.com'];
+    }
+
+    // Սրահի կարգավորումները. կարդում են բոլորը, փոխում է միայն ադմինը
+    match /config/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Զբաղված ժամերը. բոլորը տեսնում են (առանց անունների),
+    // զբաղեցնել կարելի է միայն ազատ ժամը, ազատում է միայն ադմինը
+    match /slots/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['date', 'bk'])
+        && request.resource.data.date is string
+        && request.resource.data.bk is string
+        && existsAfter(/databases/$(database)/documents/bookings/$(request.resource.data.bk));
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Գրանցումները. ստեղծել կարող է ցանկացածը, տեսնում և փոխում է միայն ադմինը
+    match /bookings/{id} {
+      allow read, update, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['id','date','time','barber','barberName','service','serviceName','items','price','dur','name','phone','status','by','created','slots'])
+        && request.resource.data.status == 'new'
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 60
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 30
+        && request.resource.data.date is string
+        && request.resource.data.time is string
+        && request.resource.data.slots is list
+        && request.resource.data.slots.size() <= 20;
+    }
+  }
+}
