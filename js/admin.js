@@ -1,8 +1,9 @@
-import { app, db, configured, $, esc, WD, WDL, MO, ymOf, addM, monthTitle, monthGrid, pd, addD, money, today, toMin, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG, DEFAULT_CONFIG } from "./core.js";
+import { app, db, configured, $, esc, WD, WDL, MO, ymOf, addM, monthTitle, monthGrid, pd, addD, money, today, toMin, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG, toolsRow, icon, DEFAULT_CONFIG } from "./core.js";
 import { doc, collection, query, where, onSnapshot, updateDoc, setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 $("#pole").innerHTML = poleSVG();
+$("#tools").innerHTML = toolsRow();
 let cfg = null, rows = [], upcoming = [], taken = new Set(), draft = null, unsubDay = [], unsubUp = null;
 const A = { tab: "list", date: today(), bar: "all", confirm: null, ym: ymOf(today()) };
 const svcs = () => svcsOf(cfg), bars = () => barsOf(cfg), step = () => stepOf(cfg);

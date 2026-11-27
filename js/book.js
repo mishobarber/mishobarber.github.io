@@ -1,7 +1,9 @@
-import { db, configured, $, esc, WD, MO, ymOf, addM, monthTitle, monthGrid, BOOK_DAYS, pd, addD, fDate, money, today, ls, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG } from "./core.js";
+import { db, configured, $, esc, WD, MO, ymOf, addM, monthTitle, monthGrid, BOOK_DAYS, pd, addD, fDate, money, today, ls, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG, toolsRow, icon } from "./core.js";
 import { doc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 $("#pole").innerHTML = poleSVG();
+$("#tools").innerHTML = toolsRow();
+[["#s1","scissors"],["#s3","razor"],["#s4","comb"]].forEach(([id,k]) => $(id + " h2").insertAdjacentHTML("beforeend", icon(k, "hic")));
 let cfg = null, cfgLoaded = false, taken = new Set();
 const S = { svcs: [], bar: null, date: null, time: null, ym: null };
 const svcs = () => svcsOf(cfg), bars = () => barsOf(cfg), step = () => stepOf(cfg);

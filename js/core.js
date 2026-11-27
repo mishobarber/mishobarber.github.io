@@ -83,7 +83,20 @@ export function errText(e, cfg) {
 }
 
 export function poleSVG() {
-  return `<svg class="pole" viewBox="0 0 64 150" aria-hidden="true"><defs><pattern id="pp" width="40" height="48" patternUnits="userSpaceOnUse" patternTransform="skewY(-32)"><rect width="40" height="48" fill="#fff"/><rect width="40" height="16" fill="#d71f2b"/><rect y="24" width="40" height="8" fill="#2350e6"/></pattern><clipPath id="glass"><rect x="18" y="26" width="28" height="98" rx="4"/></clipPath><linearGradient id="sh" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".28"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></linearGradient></defs><circle cx="32" cy="11" r="9" fill="#f3f1ee"/><circle cx="29" cy="8" r="3" fill="#fff"/><rect x="12" y="18" width="40" height="10" rx="3" fill="#16161a"/><g clip-path="url(#glass)"><g class="stripes"><rect width="64" height="200" fill="url(#pp)"/></g><rect x="18" y="26" width="28" height="98" fill="url(#sh)"/></g><rect x="12" y="122" width="40" height="10" rx="3" fill="#16161a"/><rect x="22" y="132" width="20" height="14" rx="3" fill="#16161a"/></svg>`;
+  return `<svg class="pole" viewBox="0 0 64 150" aria-hidden="true"><defs><linearGradient id="gd" x1="0" x2="1"><stop offset="0" stop-color="#8a6a1f"/><stop offset=".45" stop-color="#f3d27a"/><stop offset=".7" stop-color="#d4af37"/><stop offset="1" stop-color="#7a5c17"/></linearGradient><pattern id="pp" width="40" height="48" patternUnits="userSpaceOnUse" patternTransform="skewY(-32)"><rect width="40" height="48" fill="#f2ead8"/><rect width="40" height="16" fill="#0b0b0c"/><rect y="24" width="40" height="8" fill="#d4af37"/></pattern><clipPath id="glass"><rect x="18" y="26" width="28" height="98" rx="4"/></clipPath><linearGradient id="sh" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".35" stop-color="#fff" stop-opacity=".3"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient></defs><circle cx="32" cy="11" r="9" fill="url(#gd)"/><circle cx="29" cy="8" r="2.5" fill="#fff8e0" opacity=".8"/><rect x="12" y="18" width="40" height="10" rx="3" fill="url(#gd)"/><g clip-path="url(#glass)"><g class="stripes"><rect width="64" height="200" fill="url(#pp)"/></g><rect x="18" y="26" width="28" height="98" fill="url(#sh)"/></g><rect x="12" y="122" width="40" height="10" rx="3" fill="url(#gd)"/><rect x="22" y="132" width="20" height="14" rx="3" fill="url(#gd)"/></svg>`;
+}
+
+// gold barber tool icons: scissors, razor, mustache, comb
+export const ICONS = {
+  scissors: '<g fill="none" stroke="url(#tg)" stroke-width="1.8" stroke-linecap="round"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.2 16 19.5 3.5M15.8 16 4.5 3.5"/></g><circle cx="12" cy="10.2" r="1" fill="url(#tg)"/>',
+  razor: '<path d="M4 15.5 14.5 5a2.5 2.5 0 0 1 3.5 3.5L7.5 19Z" fill="url(#tg)" opacity=".95"/><path d="M7.5 19 4 22.5M5.5 17" stroke="url(#tg)" stroke-width="2.4" stroke-linecap="round"/><path d="M6.5 14 15 5.5" stroke="#0b0b0c" stroke-width=".8" opacity=".6"/>',
+  mustache: '<path d="M12 12.3c-1.4-2.4-3.9-3-6-1.6-1.2.8-2.3.6-3.2-.3.2 2.8 2.6 4.6 5.3 4 1.7-.4 2.9-1.3 3.9-2.1 1 .8 2.2 1.7 3.9 2.1 2.7.6 5.1-1.2 5.3-4-.9.9-2 1.1-3.2.3-2.1-1.4-4.6-.8-6 1.6Z" fill="url(#tg)"/>',
+  comb: '<rect x="2.5" y="6" width="19" height="4" rx="1.2" fill="url(#tg)"/><path d="M4.5 10v7M7 10v7M9.5 10v7M12 10v7M14.5 10v5M17 10v5M19.5 10v5" stroke="url(#tg)" stroke-width="1.3" stroke-linecap="round"/>'
+};
+const TG = '<defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6dc8c"/><stop offset=".5" stop-color="#d4af37"/><stop offset="1" stop-color="#9c7a25"/></linearGradient></defs>';
+export const icon = (k, cls = "ic") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${TG}${ICONS[k]}</svg>`;
+export function toolsRow() {
+  return `<span class="tl"></span>${["scissors", "razor", "mustache", "comb"].map(k => icon(k)).join('<i class="dot"></i>')}<span class="tl"></span>`;
 }
 
 export const DEFAULT_CONFIG = {
