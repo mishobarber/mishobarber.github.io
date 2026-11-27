@@ -65,3 +65,12 @@ firestore.rules       անվտանգության կանոններ (պատճեն�
 ```
 
 > `firebase-config.js`-ի բանալիները գաղտնի չեն, դրանք նախատեսված են բրաուզերի համար։ Անվտանգությունը ապահովում է `firestore.rules`-ը։
+
+## Telegram ծանուցումներ Միշոյին
+
+1. Telegram-ում բացեք **@BotFather** → `/newbot` → անուն (օր. `Misho Barber`) → username (օր. `misho_barber_bot`)։ Կստանաք **token**։
+2. Միշոն իր Telegram-ից բացում է բոտը և սեղմում **Start**։
+3. Բրաուզերում բացեք `https://api.telegram.org/bot<TOKEN>/getUpdates` → գտեք `"chat":{"id":...}` թիվը։
+4. `js/notify-config.js` ֆայլում լրացրեք `token` և `chatId`։
+
+> Token-ը երևում է կայքի կոդում։ Վատագույն դեպքում ինչ-որ մեկը կարող է բոտի անունից նամակ ուղարկել Միշոյին. այդ դեպքում @BotFather-ում `/revoke` և նոր token։

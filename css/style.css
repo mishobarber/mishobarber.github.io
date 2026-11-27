@@ -205,3 +205,5 @@ input:focus,select:focus{border-color:#d4af37;outline:none}
 .ov{background:rgba(0,0,0,.7)}
 .foot{color:#8a8476}
 ::selection{background:#d4af37;color:#0b0b0c}
+.btn.wa{background:#1f9d55;color:#fff;box-shadow:0 6px 24px rgba(31,157,85,.25);text-decoration:none}.btn.wa:hover{background:#1a8a4a}
+.done .btn.big.ghost{min-height:52px}

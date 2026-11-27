@@ -1,4 +1,4 @@
-import { db, configured, $, esc, WD, MO, ymOf, addM, monthTitle, monthGrid, BOOK_DAYS, pd, addD, fDate, money, today, ls, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, poleSVG, toolsRow, icon } from "./core.js";
+import { db, configured, $, esc, WD, MO, ymOf, addM, monthTitle, monthGrid, BOOK_DAYS, pd, addD, fDate, money, today, ls, stepOf, svcsOf, barsOf, isOff, freeTimes, makeEntry, saveBooking, errText, notifyTelegram, bookingText, waNumber, poleSVG, toolsRow, icon } from "./core.js";
 import { doc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 $("#pole").innerHTML = poleSVG();
@@ -79,12 +79,16 @@ async function book() {
   const btn = $("#bookBtn"); btn.setAttribute("aria-disabled", "true"); btn.textContent = "Պահպանվում է…";
   try {
     const e = await saveBooking(makeEntry(cfg, S.date, S.time, sl, bar, name, phone, "client"));
+    notifyTelegram(e, cfg);
     mine = mine.filter(x => x.date >= today()); mine.push({ date: e.date, time: e.time, serviceName: e.serviceName, price: e.price });
     ls.set("bs_mine", JSON.stringify(mine)); renderMine();
     $("#okBody").innerHTML = [["Ժամ", e.time], ["Օր", fDate(e.date)], ["Վարսավիր", e.barberName], ["Տևողություն", e.dur + " րոպե"], ...e.items.map(x => [x.name, money(x.price)])]
       .map(([k, v]) => `<div class="kv"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")
       + `<div class="kv total"><span>Ընդամենը</span><b>${esc(money(e.price))}</b></div>`
       + (cfg?.address ? `<p class="note">${esc(cfg.address)}</p>` : "");
+    const wa = waNumber(cfg?.phone);
+    $("#okWa").hidden = !wa;
+    if (wa) $("#okWa").href = "https://wa.me/" + wa + "?text=" + encodeURIComponent(bookingText(e, cfg, false));
     $("#ov").hidden = false; S.time = null; S.svcs = []; render();
   } catch (x) { console.error(x); msg.textContent = errText(x, cfg); render(); }
   btn.removeAttribute("aria-disabled"); btn.textContent = "Գրանցվել";

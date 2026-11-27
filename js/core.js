@@ -1,4 +1,5 @@
 import { firebaseConfig } from "./firebase-config.js";
+import { TELEGRAM } from "./notify-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, collection, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -125,4 +126,19 @@ export function monthGrid(ym, cell) {
   for (let i = 0; i < lead; i++) h += "<span></span>";
   for (let d = 1; d <= n; d++) h += cell(ym + "-" + pad(d), d);
   return h + "</div>";
+}
+
+// ---- notifications ----
+export const waNumber = p => { let d = String(p || "").replace(/\D/g, ""); if (d.startsWith("00")) d = d.slice(2); if (d.startsWith("0")) d = "374" + d.slice(1); if (d.length === 8) d = "374" + d; return d; };
+export function bookingText(e, cfg, forBarber) {
+  const lines = forBarber
+    ? ["✂️ Նոր գրանցում", "", `🕐 ${e.time} · ${fDate(e.date)}`, `👤 ${e.name}`, `📞 ${e.phone}`, `💈 ${e.serviceName}`, `⏱ ${e.dur} րոպե`, `💰 ${money(e.price)}`]
+    : [`Բարև, գրանցվել եմ ${cfg?.name || "Ձեզ մոտ"}`, "", `🕐 ${e.time} · ${fDate(e.date)}`, `👤 ${e.name}`, `💈 ${e.serviceName}`, `💰 Ընդամենը՝ ${money(e.price)}`];
+  return lines.join("\n");
+}
+// Fire-and-forget: a simple form POST works cross-origin without preflight.
+export function notifyTelegram(e, cfg) {
+  if (!TELEGRAM.token || !TELEGRAM.chatId) return;
+  const body = new URLSearchParams({ chat_id: TELEGRAM.chatId, text: bookingText(e, cfg, true) });
+  try { fetch(`https://api.telegram.org/bot${TELEGRAM.token}/sendMessage`, { method: "POST", mode: "no-cors", body }).catch(() => {}); } catch (x) {}
 }
